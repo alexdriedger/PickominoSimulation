@@ -50,7 +50,7 @@ class GameState:
 
         # Dice rolled. Need to select dice to keep
         if not self.is_roll_resolved:
-            print("Resolving dice roll")
+            # print("Resolving dice roll")
 
             # Add die numbers that were rolled but have not been saved yet
             for die in set(self.dice_roll):
@@ -59,7 +59,7 @@ class GameState:
 
         else:
             # Find the possible dominoes that can be taken
-            print("Checking if possible to take domino")
+            # print("Checking if possible to take domino")
 
             # Must have a worm saved to take a domino
             if self.saved_dice.__contains__(6):
@@ -90,13 +90,13 @@ class GameState:
                             possible_actions.append(Action(Action.ACTION_TAKE_DOMINO, domino))
 
             # Check if possible to roll again
-            print("Checking if possible to roll again")
+            # print("Checking if possible to roll again")
             if len(set(self.saved_dice)) < 6 and len(self.saved_dice) < self.num_dice:
                 possible_actions.append(Action(Action.ACTION_ROLL_DICE))
 
         if len(possible_actions) == 0:
             # Return only next player turn action
-            print("No possible actions for current player")
+            # print("No possible actions for current player")
             possible_actions.append(Action(Action.ACTION_NEXT_PLAYER_TURN))
 
         return possible_actions
@@ -114,24 +114,24 @@ class GameState:
         # global ACTION_NEXT_PLAYER_TURN
 
         if action.name == Action.ACTION_ROLL_DICE:
-            print("Rolling dice")
+            # print("Rolling dice")
             self.dice_roll = [random.randrange(1, 7) for x in range(self.num_dice - len(self.saved_dice))]
-            print(f"Rolled:\t{self.dice_roll}")
+            # print(f"Rolled:\t{self.dice_roll}")
             self.is_roll_resolved = False
 
             # Check if player busted
             if set(self.dice_roll).issubset(set(self.saved_dice)):
-                print("Player busted")
+                # print("Player busted")
                 self.lose_domino()
                 self.increment_player_turn()
-                self.print_current_state()
+                # self.print_current_state()
 
         elif action.name == Action.ACTION_SAVE_DICE:
-            print("Saving dice")
+            # print("Saving dice")
             for die in self.dice_roll:
                 if die == action.optional_args:
                     self.saved_dice.append(die)
-            print(f"Saved dice:\t{self.saved_dice}")
+            # print(f"Saved dice:\t{self.saved_dice}")
             self.dice_roll.clear()
             self.is_roll_resolved = True
 
@@ -151,21 +151,22 @@ class GameState:
             # Add domino to player
             self.player_states[self.player_turn].append(action.optional_args)
             self.increment_player_turn()
-            print("Player states:")
-            for p in self.player_states:
-                print(p)
+            # print("Player states:")
+            # for p in self.player_states:
+            #     print(p)
 
         elif action.name == Action.ACTION_NEXT_PLAYER_TURN:
+            self.lose_domino()
             self.increment_player_turn()
 
-        print("\n####### Completed Action ####")
-        print(f"Action:\t{action.name}\tArgs:\t{action.optional_args}")
+        # print("\n####### Completed Action ####")
+        # print(f"Action:\t{action.name}\tArgs:\t{action.optional_args}")
 
         # Logging
-        # if action.name == Action.ACTION_TAKE_DOMINO:
-        #     print("\n####### Completed Action ####")
-        #     print(f"Action:\t{action.name}\tArgs:\t{action.optional_args}")
-        #     self.print_current_state()
+        if action.name == Action.ACTION_TAKE_DOMINO:
+            print("\n####### Completed Action ####")
+            print(f"Action:\t{action.name}\tArgs:\t{action.optional_args}")
+            self.print_current_state()
 
     def lose_domino(self):
         print("Losing domino")
@@ -185,8 +186,8 @@ class GameState:
             self.community_dominoes = self.community_dominoes[:-1]
 
     def increment_player_turn(self):
-        print("Next player's turn")
-        print("Resetting dice")
+        # print("Next player's turn")
+        # print("Resetting dice")
         self.saved_dice.clear()
         self.dice_roll.clear()
         self.is_roll_resolved = True
