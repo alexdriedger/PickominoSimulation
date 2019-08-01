@@ -1,5 +1,6 @@
 import math
 import random
+from collections import defaultdict
 from Action import Action
 
 
@@ -40,6 +41,11 @@ class GameState:
 
     # def __copy__(self):
 
+    def is_game_over(self):
+        if len(self.community_dominoes) == 0:
+            return True
+        return False
+
     def get_next_actions(self):
         """
         Get all possible actions to take based on the current game state. Does not mutate self
@@ -47,6 +53,12 @@ class GameState:
         """
 
         possible_actions = []
+
+        # Check if the game is over
+        if self.is_game_over():
+            print("Game over. Final game state below")
+            self.print_current_state()
+            raise RuntimeError("get_next_action shouldn't be called on a complete game")
 
         # Dice rolled. Need to select dice to keep
         if not self.is_roll_resolved:
@@ -86,8 +98,9 @@ class GameState:
                 # of their domino stack
                 for player_num, player_dominoes in enumerate(self.player_states):
                     if player_num != self.player_turn and len(player_dominoes) > 0:
-                        if player_dominoes[len(player_dominoes) - 1][0] == score:
-                            possible_actions.append(Action(Action.ACTION_TAKE_DOMINO, domino))
+                        player_top_domino = player_dominoes[-1]
+                        if player_top_domino[0] == score:
+                            possible_actions.append(Action(Action.ACTION_TAKE_DOMINO, player_top_domino))
 
             # Check if possible to roll again
             # print("Checking if possible to roll again")
@@ -136,7 +149,7 @@ class GameState:
             self.is_roll_resolved = True
 
         elif action.name == Action.ACTION_TAKE_DOMINO:
-            print(f"Taking domino:\t{action.optional_args}")
+            # print(f"Taking domino:\t{action.optional_args}")
             prev_length = len(self.community_dominoes)
             # Remove domino from community dominoes
             self.community_dominoes[:] = [x for x in self.community_dominoes if not x == action.optional_args]
@@ -144,7 +157,7 @@ class GameState:
             # Domino was in a player stack
             if prev_length == len(self.community_dominoes):
                 for player_num, player in enumerate(self.player_states):
-                    if player_num != self.player_turn and player[-1] == action.optional_args:
+                    if player_num != self.player_turn and len(player) > 0 and player[-1] == action.optional_args:
                         self.player_states[self.player_turn] = player[:-1]
                         break
 
@@ -163,18 +176,19 @@ class GameState:
         # print(f"Action:\t{action.name}\tArgs:\t{action.optional_args}")
 
         # Logging
-        if action.name == Action.ACTION_TAKE_DOMINO:
-            print("\n####### Completed Action ####")
-            print(f"Action:\t{action.name}\tArgs:\t{action.optional_args}")
-            self.print_current_state()
+        # if action.name == Action.ACTION_TAKE_DOMINO:
+        #     print("\n####### Completed Action ####")
+        #     print(f"Action:\t{action.name}\tArgs:\t{action.optional_args}")
+        #     self.print_current_state()
 
     def lose_domino(self):
-        print("Losing domino")
+        # print("Losing domino")
+        # Only lose domino if player has 1 or more dominoes
         if len(self.player_states[self.player_turn]) > 0:
             domino = self.player_states[self.player_turn][-1]
             # Remove domino from player
             self.player_states[self.player_turn] = self.player_states[self.player_turn][:-1]
-            # Add domino back to community
+            # Add domino back to community in sorted order
             num_community_dominoes = len(self.community_dominoes)
             for index, community_domino in enumerate(self.community_dominoes):
                 if domino < community_domino:
@@ -220,3 +234,12 @@ class GameState:
                 print("*", end='')
             print(f"Player {player_num}:\t{dominoes}\tWorms:\t{score}")
         print("#############################\n")
+
+    def calculate_worm_count(self):
+        counts = defaultdict(int)
+        for player_num, dominoes in enumerate(self.player_states):
+            for d in dominoes:
+                counts[player_num] += d[1]
+            if len(dominoes) == 0:
+                counts[player_num] = 0
+        return counts
