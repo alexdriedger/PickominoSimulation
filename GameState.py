@@ -6,12 +6,6 @@ from Action import Action
 
 class GameState:
 
-    # # Determine best way to pass optional param with save dice and take domino action
-    # ACTION_ROLL_DICE = "Roll dice"
-    # ACTION_SAVE_DICE = "Save dice"
-    # ACTION_TAKE_DOMINO = "Take domino"
-    # ACTION_NEXT_PLAYER_TURN = "Next player turn"
-
     def __init__(self, num_players):
         """
         Create a GameState for a new game

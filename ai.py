@@ -3,6 +3,7 @@ from collections import defaultdict
 from GameState import GameState
 from Action import Action
 
+
 def random_ai(game_state: GameState, possible_actions: list):
     """
     Picks a random possible action
