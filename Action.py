@@ -8,3 +8,9 @@ class Action:
     def __init__(self, name, optional_args=None):
         self.name = name
         self.optional_args = optional_args
+
+    def __str__(self):
+        return f"({self.name}, {str(self.optional_args)})"
+
+    def __eq__(self, other):
+        return self.name == other.name and self.optional_args == other.optional_args

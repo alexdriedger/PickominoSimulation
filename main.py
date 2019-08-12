@@ -1,9 +1,6 @@
 from ai import *
 from GameState import GameState
 
-# TODO : Write some unit tests for GameState to make sure that it works correctly
-# TODO : Do a Monte Carlo AI
-
 
 def play_game(num_players):
     # Initialize a new game
@@ -11,9 +8,9 @@ def play_game(num_players):
 
     # Assign an ai to each player
     player_ais = dict([
-        (0, random_ai),
+        (0, monte_carlo_ai_random_playouts),
         (1, safe_ai_better_die_saving),
-        (2, safe_ai),
+        (2, monte_carlo_ai_random_playouts),
         (3, safe_ai_better_die_saving)
     ])
 
@@ -31,6 +28,7 @@ def play_turn(game_state: GameState, ai):
     current_player = game_state.player_turn
 
     while game_state.player_turn == current_player:
+        game_state.assert_valid_game_state()
         chosen_action = ai(game_state, game_state.get_next_actions())
         game_state.resolve_action(chosen_action)
 
@@ -43,6 +41,7 @@ def simulate_games(num_games):
     for i in range(num_games):
         # Simulate game
         final_game_state = play_game(num_players)
+        print(f"Finished game {i}")
 
         # Determine Placing
         worm_counts = final_game_state.calculate_worm_count()
@@ -60,4 +59,4 @@ def simulate_games(num_games):
         print(f"Player {player_num}:\t{results}")
 
 
-simulate_games(200)
+simulate_games(20)

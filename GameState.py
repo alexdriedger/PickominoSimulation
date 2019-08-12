@@ -2,9 +2,13 @@ import math
 import random
 from collections import defaultdict
 from Action import Action
+from typing import DefaultDict, List
 
 
 class GameState:
+
+    MIN_DOMINO = 21
+    MAX_DOMINO = 37
 
     def __init__(self, num_players):
         """
@@ -19,7 +23,7 @@ class GameState:
 
         # Populate community dominoes
         self.community_dominoes = []
-        for i in range(21, 37):
+        for i in range(self.MIN_DOMINO, self.MAX_DOMINO):
             num_worms = math.floor((i - 17) / 4)
             self.community_dominoes.append((i, num_worms))
 
@@ -33,14 +37,31 @@ class GameState:
 
         self.is_roll_resolved = True
 
-    # def __copy__(self):
+    def __copy__(self):
+        self.assert_valid_game_state()
+        gs_copy = GameState(self.num_players)
+        gs_copy.player_states = []
+        for ps in self.player_states:
+            gs_copy.player_states.append(ps.copy())
+        gs_copy.community_dominoes = self.community_dominoes.copy()
+        gs_copy.player_turn = self.player_turn
+        gs_copy.saved_dice = self.saved_dice.copy()
+        gs_copy.dice_roll = self.dice_roll.copy()
+        gs_copy.assert_valid_game_state()
+        return gs_copy
+
+    def __str__(self):
+        return f"num_players:{self.num_players}.player_states:{self.player_states}." \
+            f"community_dominoes:{self.community_dominoes}.player_turn:{self.player_turn}." \
+            f"num_dice:{self.num_dice}.saved_dice:{self.saved_dice}.dice_roll:{self.dice_roll}." \
+            f"is_roll_resolved:{self.is_roll_resolved}"
 
     def is_game_over(self):
         if len(self.community_dominoes) == 0:
             return True
         return False
 
-    def get_next_actions(self):
+    def get_next_actions(self) -> List[Action]:
         """
         Get all possible actions to take based on the current game state. Does not mutate self
         :return: list of actions with >= 1 actions
@@ -108,17 +129,19 @@ class GameState:
 
         return possible_actions
 
-    def resolve_action(self, action):
+    def resolve_action(self, action: Action):
         """
-        Play the action out on the state. Mutates game state
-        :param action: action to take
-        :return: state after action completed
+        Play the action out on the state. Mutates game state. If you need a new state, first
+        create a shallow copy of the state and then call resolve_action.
+        :param action: Action to take
         """
 
-        # global ACTION_ROLL_DICE
-        # global ACTION_SAVE_DICE
-        # global ACTION_TAKE_DOMINO
-        # global ACTION_NEXT_PLAYER_TURN
+        try:
+            self.assert_valid_game_state()
+        except AssertionError:
+            self.print_current_state()
+            print(action)
+            raise
 
         if action.name == Action.ACTION_ROLL_DICE:
             # print("Rolling dice")
@@ -152,7 +175,7 @@ class GameState:
             if prev_length == len(self.community_dominoes):
                 for player_num, player in enumerate(self.player_states):
                     if player_num != self.player_turn and len(player) > 0 and player[-1] == action.optional_args:
-                        self.player_states[self.player_turn] = player[:-1]
+                        self.player_states[player_num] = player[:-1]
                         break
 
             # Add domino to player
@@ -174,6 +197,13 @@ class GameState:
         #     print("\n####### Completed Action ####")
         #     print(f"Action:\t{action.name}\tArgs:\t{action.optional_args}")
         #     self.print_current_state()
+
+        try:
+            self.assert_valid_game_state()
+        except AssertionError:
+            # self.print_current_state()
+            print(f"Action attempted:\t{action}")
+            raise
 
     def lose_domino(self):
         # print("Losing domino")
@@ -205,6 +235,9 @@ class GameState:
             self.player_turn += 1
 
     def print_current_state(self):
+        """
+        Prints current game state. Useful for debugging.
+        """
         score = 0
         for die in self.saved_dice:
             if die == 6:
@@ -229,7 +262,11 @@ class GameState:
             print(f"Player {player_num}:\t{dominoes}\tWorms:\t{score}")
         print("#############################\n")
 
-    def calculate_worm_count(self):
+    def calculate_worm_count(self) -> DefaultDict[int, int]:
+        """
+        Returns the number of worms each player has
+        :return: Dictionary mapping player number to number of worms that player has
+        """
         counts = defaultdict(int)
         for player_num, dominoes in enumerate(self.player_states):
             for d in dominoes:
@@ -237,3 +274,13 @@ class GameState:
             if len(dominoes) == 0:
                 counts[player_num] = 0
         return counts
+
+    def assert_valid_game_state(self):
+        sum = 0
+        for i in self.player_states:
+            sum += len(i)
+        # print(f"sum: {sum}. community: {len(self.community_dominoes)}")
+        # assert sum + len(self.community_dominoes) == self.MAX_DOMINO - self.MIN_DOMINO
+        if sum + len(self.community_dominoes) > self.MAX_DOMINO - self.MIN_DOMINO:
+            self.print_current_state()
+            raise AssertionError("Invalid Game State")
