@@ -16,11 +16,29 @@ class GameStateTests(unittest.TestCase):
 
     def test_save_dice(self):
         self.game_state.dice_roll = [3, 3, 4, 2, 3, 5, 5, 6]
+        self.game_state.is_roll_resolved = False
         action = Action(Action.ACTION_SAVE_DICE, 5)
         self.game_state.resolve_action(action)
         self.assertListEqual(self.game_state.saved_dice, [5, 5])
 
     def test_copy(self):
+        self.game_state.player_turn = 1
+        gs_copy = self.game_state.__copy__()
+
+        self.assertEqual(gs_copy.num_players, self.game_state.num_players)
+
+        for player_num, gs_copy_player_dominoes in enumerate(gs_copy.player_states):
+            self.assertListEqual(gs_copy_player_dominoes, self.game_state.player_states[player_num])
+
+        self.assertListEqual(gs_copy.community_dominoes, self.game_state.community_dominoes)
+
+        self.assertEqual(gs_copy.player_turn, self.game_state.player_turn)
+        self.assertEqual(gs_copy.num_dice, self.game_state.num_dice)
+        self.assertListEqual(gs_copy.saved_dice, self.game_state.saved_dice)
+        self.assertListEqual(gs_copy.dice_roll, self.game_state.dice_roll)
+        self.assertEqual(gs_copy.is_roll_resolved, self.game_state.is_roll_resolved)
+
+    def test_copy_take_domino(self):
         starting_dominoes = [(21, 1), (23, 1), (24, 1), (26, 2), (27, 2), (28, 2), (29, 3), (31, 3),
                              (32, 3), (33, 4), (34, 4), (35, 4), (36, 4)]
         starting_player_states = [[], [(22, 1), (30, 3)], [(25, 2)], []]
