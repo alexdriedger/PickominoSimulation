@@ -49,6 +49,7 @@ class GameState:
         gs_copy.player_turn = self.player_turn
         gs_copy.saved_dice = self.saved_dice.copy()
         gs_copy.dice_roll = self.dice_roll.copy()
+        gs_copy.is_roll_resolved = self.is_roll_resolved
         gs_copy.assert_valid_game_state()
         return gs_copy
 
@@ -188,7 +189,6 @@ class GameState:
             prev_length = len(self.community_dominoes)
 
             # Remove domino from community dominoes
-            # TODO : Is this right? Why is there [:]?
             self.community_dominoes[:] = [x for x in self.community_dominoes if not x == action.optional_args]
 
             # Domino was in a player stack
