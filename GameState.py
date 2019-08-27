@@ -11,6 +11,7 @@ class GameState:
     MAX_DOMINO = 37
     NUM_DICE = 8
     STARTING_PLAYER_TURN = 0
+    DEBUG = True
 
     def __init__(self, num_players):
         """
@@ -40,7 +41,8 @@ class GameState:
         self.is_roll_resolved = True
 
     def __copy__(self):
-        self.assert_valid_game_state()
+        if self.DEBUG:
+            self.assert_valid_game_state()
         gs_copy = GameState(self.num_players)
         gs_copy.player_states = []
         for ps in self.player_states:
@@ -50,7 +52,8 @@ class GameState:
         gs_copy.saved_dice = self.saved_dice.copy()
         gs_copy.dice_roll = self.dice_roll.copy()
         gs_copy.is_roll_resolved = self.is_roll_resolved
-        gs_copy.assert_valid_game_state()
+        if self.DEBUG:
+            gs_copy.assert_valid_game_state()
         return gs_copy
 
     def __repr__(self):
@@ -140,22 +143,24 @@ class GameState:
         """
 
         # Ensure action is being resolved on a valid game state
-        try:
-            self.assert_valid_game_state()
-        except InvalidGameStateError:
-            raise InvalidGameStateError("resolve_action called with invalid state", game_state=self, action=action)
+        if self.DEBUG:
+            try:
+                self.assert_valid_game_state()
+            except InvalidGameStateError:
+                raise InvalidGameStateError("resolve_action called with invalid state", game_state=self, action=action)
 
         if action.name == Action.ACTION_ROLL_DICE:
-            # Check that rolling dice is a valid action
-            if self.is_roll_resolved is False:
-                raise InvalidGameStateError("Attempted to roll dice when dice roll has not been resolved",
-                                            game_state=self, action=action)
-            if len(self.saved_dice) == self.NUM_DICE:
-                raise InvalidGameStateError("Attempted to roll dice when all dice have already been saved",
-                                            game_state=self, action=action)
-            if len(set(self.saved_dice)) == 6:
-                raise InvalidGameStateError("Attempted to roll dice when all dice all six dice numbers have been saved",
-                                            game_state=self, action=action)
+            if self.DEBUG:
+                # Check that rolling dice is a valid action
+                if self.is_roll_resolved is False:
+                    raise InvalidGameStateError("Attempted to roll dice when dice roll has not been resolved",
+                                                game_state=self, action=action)
+                if len(self.saved_dice) == self.NUM_DICE:
+                    raise InvalidGameStateError("Attempted to roll dice when all dice have already been saved",
+                                                game_state=self, action=action)
+                if len(set(self.saved_dice)) == 6:
+                    raise InvalidGameStateError("Attempted to roll dice when all dice all six dice numbers have been saved",
+                                                game_state=self, action=action)
 
             # Roll dice
             self.dice_roll = [random.randrange(1, 7) for x in range(self.num_dice - len(self.saved_dice))]
@@ -167,16 +172,17 @@ class GameState:
                 self.increment_player_turn()
 
         elif action.name == Action.ACTION_SAVE_DICE:
-            # Check that rolling dice is a valid action
-            if self.is_roll_resolved is True:
-                raise InvalidGameStateError("Attempted to save dice when roll has already been resolved",
-                                            game_state=self, action=action)
-            if action.optional_args in self.saved_dice:
-                raise InvalidGameStateError("Attempted to save dice number that was saved earlier in the player's turn",
-                                            game_state=self, action=action)
-            if action.optional_args not in self.dice_roll:
-                raise InvalidGameStateError("Attempted to save dice number that was not rolled", game_state=self,
-                                            action=action)
+            if self.DEBUG:
+                # Check that rolling dice is a valid action
+                if self.is_roll_resolved is True:
+                    raise InvalidGameStateError("Attempted to save dice when roll has already been resolved",
+                                                game_state=self, action=action)
+                if action.optional_args in self.saved_dice:
+                    raise InvalidGameStateError("Attempted to save dice number that was saved earlier in the player's turn",
+                                                game_state=self, action=action)
+                if action.optional_args not in self.dice_roll:
+                    raise InvalidGameStateError("Attempted to save dice number that was not rolled", game_state=self,
+                                                action=action)
 
             # Save all dice rolled of the number to be saved
             for die in self.dice_roll:
@@ -211,11 +217,12 @@ class GameState:
             self.lose_domino()
             self.increment_player_turn()
 
-        # Ensure GameState is still valid after completing action
-        try:
-            self.assert_valid_game_state()
-        except InvalidGameStateError:
-            raise InvalidGameStateError("GameState after resolving action is invalid", game_state=self, action=action)
+        if self.DEBUG:
+            # Ensure GameState is still valid after completing action
+            try:
+                self.assert_valid_game_state()
+            except InvalidGameStateError:
+                raise InvalidGameStateError("GameState after resolving action is invalid", game_state=self, action=action)
 
     def lose_domino(self) -> bool:
         """

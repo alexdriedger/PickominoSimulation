@@ -2,7 +2,6 @@ from random import choice
 from collections import defaultdict
 from math import sqrt
 from typing import List
-from timeit import default_timer as timer
 from GameState import GameState
 from Action import Action
 
@@ -85,6 +84,7 @@ def monte_carlo_ai_random_playouts(game_state: GameState, possible_actions: List
     :param possible_actions: Possible actions to take
     :return: Next action to take
     """
+    # Do not monte carlo search if there is only one potential action
     if len(possible_actions) == 1:
         return possible_actions[0]
 
@@ -99,15 +99,9 @@ def monte_carlo_ai_random_playouts(game_state: GameState, possible_actions: List
     for num_playout in range(NUM_SIMS):
         mcts_search(game_state, game_state.player_turn, game_state.calculate_worm_count().get(game_state.player_turn),
                     Qsa, Nsa, Ns, visited)
-    s = str(game_state)
 
+    s = str(game_state)
     sorted_actions = sorted(possible_actions, key=lambda a: Nsa.get((s, str(a)), float("-inf")))
-    # game_state.print_current_state()
-    # print([str(x) for x in sorted_actions])
-    # nums = []
-    # for a in possible_actions:
-    #     nums.append((str(a), Nsa.get((s, str(a)))))
-    # print(nums)
     return sorted_actions.pop()
 
 
@@ -124,8 +118,8 @@ def mcts_search(game_state: GameState, player_turn, num_worms, Qsa, Nsa, Ns, vis
         game_state.assert_valid_game_state()
         return get_change_worm_count(gs_end_turn, player_turn, num_worms)
 
-    ucb_action = get_best_action_ucb(game_state, Qsa, Nsa, Ns)
     next_state = game_state.__copy__()
+    ucb_action = get_best_action_ucb(next_state, Qsa, Nsa, Ns)
     next_state.resolve_action(ucb_action)
     v = mcts_search(next_state, player_turn, num_worms, Qsa, Nsa, Ns, visited)
     update_search_values(v, s, str(ucb_action), Qsa, Nsa, Ns)
