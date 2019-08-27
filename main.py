@@ -1,5 +1,7 @@
 from ai import *
 from GameState import GameState
+import matplotlib.pyplot as plt
+import numpy
 
 
 def play_game(num_players: int, player_ais) -> GameState:
@@ -53,28 +55,71 @@ def simulate_games(num_games):
         (3, safe_ai_better_die_saving)
     ])
 
-    finishes = dict()
-    for player_num, x in enumerate(range(num_players)):
-        finishes[player_num] = [0]*num_players
+    # Simulate games
+    game_results = []
     for i in range(num_games):
-        # Simulate game
-        final_game_state = play_game(num_players, player_ais)
+        game_results.append(play_game(num_players, player_ais_no_monte_carlo))
         print(f"Finished game {i}")
 
-        # Determine Placing
-        worm_counts = final_game_state.calculate_worm_count()
-        sorted_player_num_by_worm_count = sorted(worm_counts, key=worm_counts.get, reverse=True)
-        prev_place = 0
-        for place, player in enumerate(sorted_player_num_by_worm_count):
-            if place != 0 and worm_counts.get(sorted_player_num_by_worm_count[place - 1]) == worm_counts.get(sorted_player_num_by_worm_count[place]):
-                finishes[player][prev_place] += 1
+    domino_counts = dict()
+    for i in range(num_players):
+        domino_counts[i] = []
+    print(domino_counts)
+    # Analyze results
+    for g_num, game in enumerate(game_results):
+        # Counts for each game
+        # domino_counts = numpy.zeros((len(game_results), num_players))
+        # domino_counts[g_num] = [count for player, count in game.calculate_worm_count().items()]
+
+        c = game.calculate_worm_count()
+        print(c)
+        for player_num, wc in c.items():
+            domino_counts[player_num].append(wc)
+
+    print(domino_counts)
+    fig, ax = plt.subplots()
+    colors = {
+        0: "bs-",
+        1: "g^-",
+        2: "cv-",
+        3: "mh-"
+    }
+    for player_num in range(num_players):
+        dc = numpy.array(domino_counts[player_num])
+        unique, counts = numpy.unique(dc, return_counts=True)
+        c = dict(zip(unique, counts))
+        x = []
+        y = []
+        # Add 0 in for all numbers of worms that were not ended the game with
+        for _ in range(21):
+            if _ not in c:
+                x.append(_)
+                y.append(0)
             else:
-                prev_place = place
-                finishes[player][prev_place] += 1
+                x.append(_)
+                y.append(c[_])
 
-    # Log results
-    for player_num, results in finishes.items():
-        print(f"Player {player_num}:\t{results}")
+        print(c)
+
+        ax.set_autoscaley_on(False)
+        ax.set_ylim([0, num_games])
+        ax.set_autoscalex_on(False)
+        ax.set_xlim([0, 20])
+        plt.plot(x, y, colors[player_num])
+    plt.show()
 
 
-simulate_games(20)
+    # # Determine Placing
+    # worm_counts = final_game_state.calculate_worm_count()
+    # sorted_player_num_by_worm_count = sorted(worm_counts, key=worm_counts.get, reverse=True)
+    # prev_place = 0
+    # for place, player in enumerate(sorted_player_num_by_worm_count):
+    #     if place != 0 and worm_counts.get(sorted_player_num_by_worm_count[place - 1]) == worm_counts.get(
+    #             sorted_player_num_by_worm_count[place]):
+    #         finishes[player][prev_place] += 1
+    #     else:
+    #         prev_place = place
+    #         finishes[player][prev_place] += 1
+
+
+simulate_games(5000)
