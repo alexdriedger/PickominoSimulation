@@ -38,7 +38,15 @@ def play_turn(game_state: GameState, ai) -> None:
         game_state.resolve_action(chosen_action)
 
 
-def simulate_games(num_games):
+def simulate_games(num_games: int) -> None:
+    """
+    Simulates num_games and plot the results. The number of worms held by the player is the x-axis and the number
+    of games with that number of worms is the y-axis
+
+    Games are simulated with a set of ai functions defined in the function
+    :param num_games: Number of games to simulate
+    :return: None
+    """
     num_players = 4
     # Assign an ai to each player
     player_ais = dict([
@@ -58,7 +66,7 @@ def simulate_games(num_games):
     # Simulate games
     game_results = []
     for i in range(num_games):
-        game_results.append(play_game(num_players, player_ais_no_monte_carlo))
+        game_results.append(play_game(num_players, player_ais))
         print(f"Finished game {i}")
 
     domino_counts = dict()
@@ -68,9 +76,6 @@ def simulate_games(num_games):
     # Analyze results
     for g_num, game in enumerate(game_results):
         # Counts for each game
-        # domino_counts = numpy.zeros((len(game_results), num_players))
-        # domino_counts[g_num] = [count for player, count in game.calculate_worm_count().items()]
-
         c = game.calculate_worm_count()
         print(c)
         for player_num, wc in c.items():
@@ -109,17 +114,4 @@ def simulate_games(num_games):
     plt.show()
 
 
-    # # Determine Placing
-    # worm_counts = final_game_state.calculate_worm_count()
-    # sorted_player_num_by_worm_count = sorted(worm_counts, key=worm_counts.get, reverse=True)
-    # prev_place = 0
-    # for place, player in enumerate(sorted_player_num_by_worm_count):
-    #     if place != 0 and worm_counts.get(sorted_player_num_by_worm_count[place - 1]) == worm_counts.get(
-    #             sorted_player_num_by_worm_count[place]):
-    #         finishes[player][prev_place] += 1
-    #     else:
-    #         prev_place = place
-    #         finishes[player][prev_place] += 1
-
-
-simulate_games(5000)
+simulate_games(50)
